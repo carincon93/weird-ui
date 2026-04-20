@@ -8,17 +8,13 @@ npm install git+https://github.com/carincon93/weird-ui.git
 ```
 
 ### Tailwind CSS Configuration
-If you are using Tailwind CSS in your project, add the library's source files to your `content` array (or `source` in Tailwind v4) so the styles are generated:
+Since Tailwind CSS v4 is CSS-first, you no longer need a `tailwind.config.js`. Instead, add the library's source files to your CSS using the `@source` directive so the styles are generated:
 
-```javascript
-// tailwind.config.js
-module.exports = {
-  content: [
-    "./src/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/@carincon93/weird-ui/src/**/*.{js,ts,jsx,tsx}",
-  ],
-  // ...
-}
+```css
+@import "tailwindcss";
+
+/* Scan the library for used classes */
+@source "../node_modules/@carincon93/weird-ui/src/**/*.{js,ts,jsx,tsx}";
 ```
 
 ## Usage
