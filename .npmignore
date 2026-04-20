@@ -1,0 +1,16 @@
+# Ignore source node_modules
+node_modules/
+
+# Do NOT ignore dist since we want it in the package even if ignored by git
+!dist/
+
+# Do NOT ignore src for Tailwind and reference
+!src/
+
+# Development files
+.vscode/
+tsconfig.json
+tsup.config.ts
+package-lock.json
+components.json
+.gitignore

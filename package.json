@@ -29,7 +29,8 @@
     "./styles.css": "./dist/styles.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
     "clean": "rimraf dist",
@@ -37,6 +38,7 @@
     "build:css": "tailwindcss -i ./src/styles/styles.css -o ./dist/styles.css --minify",
     "build": "npm run clean && npm run build:js && npm run build:css",
     "dev": "tsup --watch",
+    "prepare": "npm run build",
     "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
