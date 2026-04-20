@@ -1,0 +1,8 @@
+li[data-slot="navigation-menu-item"] a[data-slot="navigation-menu-link"] {
+    background-color: transparent;
+}
+
+.dark li[data-slot="navigation-menu-item"] a[data-slot="navigation-menu-link"]:hover {
+    color: var(--background);
+    opacity: 0.8;
+}
