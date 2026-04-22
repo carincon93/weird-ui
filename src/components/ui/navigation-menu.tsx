@@ -57,7 +57,7 @@ function NavigationMenu({
 
     // When the page loads, the svg must be at the position of the last active item
     if (lastActiveItem) {
-      const item = navWrapper.querySelector(`[data-slot="navigation-menu-item"][data-last-active-item="${lastActiveItem}"]`) as HTMLElement
+      const item = navWrapper.querySelector(`[data-slot="navigation-menu-item"][data-link-href="${lastActiveItem}"]`) as HTMLElement
       if (item) {
         moveSvgElement(item)
       }
