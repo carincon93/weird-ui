@@ -31,12 +31,7 @@ function NavigationMenu({
     const navWrapper = navRef.current
     if (!svg || !navWrapper) return
 
-
     const xTo = gsap.quickTo(svg, "x", { duration: 0.3, ease: "power2.out" })
-
-
-
-
 
     const moveSvgElement = (target: HTMLElement) => {
       activeItemRef.current = target
@@ -100,7 +95,8 @@ function NavigationMenu({
       const tl = gsap.timeline()
 
       tl.set(navRef.current, {
-        width: navRef.current?.offsetHeight,
+        width: '60px',
+        height: '60px',
         opacity: 0,
         scale: 0.5
       })
