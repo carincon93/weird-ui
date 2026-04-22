@@ -14,11 +14,13 @@ function NavigationMenu({
   viewport = true,
   stopColor1 = "red",
   stopColor2 = "violet",
+  lastActiveItem = "",
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Root> & {
   viewport?: boolean
   stopColor1?: string
   stopColor2?: string
+  lastActiveItem?: string
 }) {
 
   const navRef = React.useRef<React.ComponentRef<typeof NavigationMenuPrimitive.Root>>(null)
@@ -53,10 +55,19 @@ function NavigationMenu({
       item.addEventListener("click", handleInteraction)
     })
 
-    // When the page loads, the svg is not in the correct position, so we need to move it to the position of the first item
-    const firstItem = navWrapper.querySelector('[data-slot="navigation-menu-item"]') as HTMLElement
-    if (firstItem) {
-      moveSvgElement(firstItem)
+    // When the page loads, the svg must be at the position of the last active item
+    if (lastActiveItem) {
+      const item = navWrapper.querySelector(`[data-slot="navigation-menu-item"][data-last-active-item="${lastActiveItem}"]`) as HTMLElement
+      if (item) {
+        moveSvgElement(item)
+      }
+    }
+    // else the svg must be at the position of the first item 
+    else {
+      const firstItem = navWrapper.querySelector('[data-slot="navigation-menu-item"]') as HTMLElement
+      if (firstItem) {
+        moveSvgElement(firstItem)
+      }
     }
 
     const observer = new ResizeObserver(() => {
@@ -94,6 +105,7 @@ function NavigationMenu({
 
       const tl = gsap.timeline()
 
+      // Apple-style Dynamic Island animation when the component is mounted
       tl.set(navRef.current, {
         width: '60px',
         height: '60px',
