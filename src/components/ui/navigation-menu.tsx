@@ -5,7 +5,6 @@ import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui"
 import { ChevronDownIcon } from "lucide-react"
 import gsap from "gsap"
 
-import "../../styles/NavigationMenu.css"
 import { cn } from "../../lib/utils"
 
 function NavigationMenu({
@@ -140,7 +139,7 @@ function NavigationMenu({
       data-slot="navigation-menu"
       data-viewport={viewport}
       className={cn(
-        "group/navigation-menu fixed mx-auto inset-x-0 z-50 top-4 flex flex-1 items-center justify-center ring-1 ring-white/10 dark:ring-black/10 bg-black dark:bg-white rounded-full py-3 px-5 text-white dark:text-black opacity-0",
+        "weird-nav group/navigation-menu fixed mx-auto inset-x-0 z-50 top-4 flex flex-1 items-center justify-center ring-1 ring-white/10 dark:ring-black/10 bg-black dark:bg-white rounded-full py-3 px-5 text-white dark:text-black opacity-0",
         className
       )}
       {...props}
