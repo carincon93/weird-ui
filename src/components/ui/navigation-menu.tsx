@@ -405,15 +405,3 @@ export {
   NavigationMenuListItem,
   navigationMenuTriggerStyle,
 }
-
-// // Add keyframes for the pulse animation
-// if (typeof document !== 'undefined') {
-//   const style = document.createElement('style')
-//   style.textContent = `
-//     @keyframes pulse {
-//       0%, 100% { opacity: 0.3; transform: scale(0.8); }
-//       50% { opacity: 1; transform: scale(1.2); }
-//     }
-//   `
-//   document.head.appendChild(style)
-// }
