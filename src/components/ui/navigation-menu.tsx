@@ -1,9 +1,9 @@
 
 import * as React from "react"
+import gsap from "gsap"
 import { cva } from "class-variance-authority"
 import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui"
 import { ChevronDownIcon } from "lucide-react"
-import gsap from "gsap"
 
 import { cn } from "../../lib/utils"
 
@@ -14,18 +14,24 @@ function NavigationMenu({
   stopColor1 = "red",
   stopColor2 = "violet",
   lastActiveItem = "",
+  routeAboutToChange = false,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Root> & {
   viewport?: boolean
   stopColor1?: string
   stopColor2?: string
-  lastActiveItem?: string
+  lastActiveItem?: string,
+  routeAboutToChange?: boolean
 }) {
 
   const navRef = React.useRef<React.ComponentRef<typeof NavigationMenuPrimitive.Root>>(null)
   const contentRef = React.useRef<HTMLDivElement>(null);
   const svgRef = React.useRef<SVGSVGElement>(null)
   const activeItemRef = React.useRef<HTMLElement | null>(null)
+  const tlRef = React.useRef<gsap.core.Timeline | null>(null)
+  const loadingRef = React.useRef<HTMLDivElement>(null)
+  const queueRef = React.useRef(Promise.resolve())
+  const isFirstRender = React.useRef(true)
 
   React.useEffect(() => {
     const svg = svgRef.current
@@ -91,6 +97,34 @@ function NavigationMenu({
     }
   }, [])
 
+  React.useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+
+    queueRef.current = queueRef.current.then(async () => {
+      if (!tlRef.current) return
+
+      if (routeAboutToChange) {
+        console.log("queue: transitioning to loading circle")
+        // Ensure timeline is paused before tweening playhead
+        tlRef.current.pause()
+        await tlRef.current.tweenTo("circle", {
+          duration: 0.6,
+          ease: "expo.inOut"
+        })
+        await gsap.to(loadingRef.current, { opacity: 1, duration: 0.3 })
+      } else {
+        console.log("queue: returning to full nav")
+        await gsap.to(loadingRef.current, { opacity: 0, duration: 0.2 })
+        tlRef.current.play()
+        // Wait for the timeline to finish reaching the end
+        await tlRef.current
+      }
+    })
+  }, [routeAboutToChange])
+
   React.useLayoutEffect(() => {
     const mm = gsap.matchMedia()
 
@@ -103,9 +137,10 @@ function NavigationMenu({
       const targetWidth = isMobile ? "90%" : isTablet ? "50%" : "60%"
 
       const tl = gsap.timeline()
+      tlRef.current = tl
 
       // Apple-style Dynamic Island animation when the component is mounted
-      tl.set(navRef.current, {
+      tlRef.current.set(navRef.current, {
         width: '60px',
         height: '60px',
         opacity: 0,
@@ -117,21 +152,27 @@ function NavigationMenu({
           duration: 1,
           ease: "back.out(1.7)"
         })
+        .addLabel("circle")
         .to(navRef.current, {
           width: targetWidth,
           duration: 0.6,
           ease: "expo.out"
-        }, "-=0.1")
+        })
         .to(contentRef.current, {
           opacity: 1,
           duration: 0.3
         }, "-=0.2")
+        .addLabel("full")
 
       return () => tl.kill()
     }, navRef)
 
-    return () => mm.revert()
+    return () => {
+      console.log("NavigationMenu unmounted")
+      mm.revert()
+    }
   }, [])
+
 
   return (
     <NavigationMenuPrimitive.Root
@@ -165,6 +206,10 @@ function NavigationMenu({
           </svg>
         </span>
         {children}
+      </div>
+      <div ref={loadingRef} className="absolute inset-0 flex items-center justify-center opacity-0 pointer-events-none">
+        <div className="flex gap-1.5">
+        </div>
       </div>
       {viewport && <NavigationMenuViewport />}
     </NavigationMenuPrimitive.Root>
@@ -305,7 +350,7 @@ function NavigationMenuListItem({
         <a href={href}>
           <div className="flex flex-col gap-1 text-sm">
             <div className="leading-none font-medium">{title}</div>
-            <div className="line-clamp-2 text-muted-foreground">{children}</div>
+            <div className="line-clamp-2 text-">{children}</div>
           </div>
         </a>
       </NavigationMenuLink>
@@ -324,4 +369,16 @@ export {
   NavigationMenuViewport,
   NavigationMenuListItem,
   navigationMenuTriggerStyle,
+}
+
+// Add keyframes for the pulse animation
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style')
+  style.textContent = `
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+  `
+  document.head.appendChild(style)
 }

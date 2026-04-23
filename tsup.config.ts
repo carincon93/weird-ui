@@ -6,5 +6,8 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: false,
-  external: ['react', 'react-dom']
+  external: ['react', 'react-dom'],
+  esbuildOptions(options) {
+    options.alias = { '@': './src' };
+  },
 });
