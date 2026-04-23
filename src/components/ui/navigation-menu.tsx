@@ -39,7 +39,7 @@ function NavigationMenu({
     lastActiveItemRef.current = lastActiveItem
     if (navRef.current) {
       let item = navRef.current.querySelector(`[data-slot="navigation-menu-item"][data-link-href="${lastActiveItem}"]`) as HTMLElement
-      
+
       // Fallback to first item if specified item is not found
       if (!item) {
         item = navRef.current.querySelector('[data-slot="navigation-menu-item"]') as HTMLElement
@@ -77,9 +77,8 @@ function NavigationMenu({
     }
 
     const handleMouseLeave = () => {
-      console.log("mouseleave")
       let item = navWrapper.querySelector(`[data-slot="navigation-menu-item"][data-link-href="${lastActiveItemRef.current}"]`) as HTMLElement
-      
+
       if (!item) {
         item = navWrapper.querySelector('[data-slot="navigation-menu-item"]') as HTMLElement
       }
@@ -100,7 +99,7 @@ function NavigationMenu({
 
     // When the page loads, the svg must be at the position of the last active item
     let initialItem = navWrapper.querySelector(`[data-slot="navigation-menu-item"][data-link-href="${lastActiveItem}"]`) as HTMLElement
-    
+
     // Fallback to first item if not found or if lastActiveItem is falsy
     if (!initialItem) {
       initialItem = navWrapper.querySelector('[data-slot="navigation-menu-item"]') as HTMLElement
@@ -183,6 +182,7 @@ function NavigationMenu({
         opacity: 0,
         scale: 0.5
       })
+        .set(contentRef.current, { display: 'none' })
         .to(navRef.current, {
           opacity: 1,
           scale: 1,
@@ -196,6 +196,7 @@ function NavigationMenu({
           ease: "expo.out"
         })
         .to(contentRef.current, {
+          display: 'block',
           opacity: 1,
           duration: 0.3
         }, "-=0.2")
@@ -205,7 +206,6 @@ function NavigationMenu({
     }, navRef)
 
     return () => {
-      console.log("NavigationMenu unmounted")
       mm.revert()
     }
   }, [])
@@ -406,14 +406,14 @@ export {
   navigationMenuTriggerStyle,
 }
 
-// Add keyframes for the pulse animation
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style')
-  style.textContent = `
-    @keyframes pulse {
-      0%, 100% { opacity: 0.3; transform: scale(0.8); }
-      50% { opacity: 1; transform: scale(1.2); }
-    }
-  `
-  document.head.appendChild(style)
-}
+// // Add keyframes for the pulse animation
+// if (typeof document !== 'undefined') {
+//   const style = document.createElement('style')
+//   style.textContent = `
+//     @keyframes pulse {
+//       0%, 100% { opacity: 0.3; transform: scale(0.8); }
+//       50% { opacity: 1; transform: scale(1.2); }
+//     }
+//   `
+//   document.head.appendChild(style)
+// }
