@@ -6,6 +6,7 @@
 @theme {
     --animate-circle-expand: circle-expand 0.5s ease-out forwards;
     --animate-bounce-scale: bounce-scale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    --animate-bloom: bloom 1.6s ease-in-out infinite;
 
     @keyframes bounce-scale {
         0% {
@@ -21,6 +22,22 @@
         100% {
             opacity: 1;
             scale: 1;
+        }
+    }
+
+    @keyframes bloom {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 0.15;
+            box-shadow: 0 0 0px 0px oklch(var(--bloom-color) / 0%);
+        }
+
+        50% {
+            transform: scale(1.35);
+            opacity: 1;
+            box-shadow: 0 0 14px 6px oklch(var(--bloom-color) / 55%);
         }
     }
 
@@ -170,6 +187,23 @@
 button {
     cursor: pointer;
     /* width: fit-content; */
+}
+
+.bloom-loader {
+    display: grid;
+    grid-template-columns: repeat(2, var(--bloom-size, 20px));
+    grid-template-rows: repeat(2, var(--bloom-size, 20px));
+    gap: var(--bloom-gap, 6px);
+
+    .bloom-square {
+        width: var(--bloom-size, 20px);
+        height: var(--bloom-size, 20px);
+        border-radius: 2px;
+        background-color: var(--bloom-color);
+        animation: var(--animate-bloom);
+        animation-delay: calc(var(--bloom-index) * 0.3s);
+        opacity: 0.15;
+    }
 }
 
 .weird-nav {

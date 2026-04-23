@@ -1,4 +1,5 @@
 export * from "./alert-dialog"
+export * from "./bloom-loader"
 export * from "./button"
 export * from "./checkbox"
 export * from "./dialog"

@@ -6,6 +6,7 @@ import { NavigationMenu as NavigationMenuPrimitive } from "radix-ui"
 import { ChevronDownIcon } from "lucide-react"
 
 import { cn } from "../../lib/utils"
+import { BloomLoader } from "./bloom-loader"
 
 function NavigationMenu({
   className,
@@ -13,6 +14,7 @@ function NavigationMenu({
   viewport = true,
   stopColor1 = "red",
   stopColor2 = "violet",
+  bloomBackgroundColor = "purple",
   lastActiveItem = "",
   routeAboutToChange = false,
   ...props
@@ -20,18 +22,37 @@ function NavigationMenu({
   viewport?: boolean
   stopColor1?: string
   stopColor2?: string
-  lastActiveItem?: string,
+  bloomBackgroundColor?: string
+  lastActiveItem?: string
   routeAboutToChange?: boolean
 }) {
-
   const navRef = React.useRef<React.ComponentRef<typeof NavigationMenuPrimitive.Root>>(null)
   const contentRef = React.useRef<HTMLDivElement>(null);
   const svgRef = React.useRef<SVGSVGElement>(null)
   const activeItemRef = React.useRef<HTMLElement | null>(null)
   const tlRef = React.useRef<gsap.core.Timeline | null>(null)
   const loadingRef = React.useRef<HTMLDivElement>(null)
-  const queueRef = React.useRef(Promise.resolve())
-  const isFirstRender = React.useRef(true)
+  const lastActiveItemRef = React.useRef(lastActiveItem)
+  const xToRef = React.useRef<ReturnType<typeof gsap.quickTo> | null>(null)
+
+  React.useEffect(() => {
+    lastActiveItemRef.current = lastActiveItem
+    if (navRef.current) {
+      let item = navRef.current.querySelector(`[data-slot="navigation-menu-item"][data-link-href="${lastActiveItem}"]`) as HTMLElement
+      
+      // Fallback to first item if specified item is not found
+      if (!item) {
+        item = navRef.current.querySelector('[data-slot="navigation-menu-item"]') as HTMLElement
+      }
+
+      if (item && xToRef.current) {
+        activeItemRef.current = item
+        const { left, width } = item.getBoundingClientRect()
+        const navLeft = navRef.current.getBoundingClientRect().left
+        xToRef.current(((left - navLeft) + width / 2) - 80)
+      }
+    }
+  }, [lastActiveItem])
 
   React.useEffect(() => {
     const svg = svgRef.current
@@ -39,6 +60,7 @@ function NavigationMenu({
     if (!svg || !navWrapper) return
 
     const xTo = gsap.quickTo(svg, "x", { duration: 0.3, ease: "power2.out" })
+    xToRef.current = xTo
 
     const moveSvgElement = (target: HTMLElement) => {
       activeItemRef.current = target
@@ -54,25 +76,38 @@ function NavigationMenu({
       }
     }
 
+    const handleMouseLeave = () => {
+      console.log("mouseleave")
+      let item = navWrapper.querySelector(`[data-slot="navigation-menu-item"][data-link-href="${lastActiveItemRef.current}"]`) as HTMLElement
+      
+      if (!item) {
+        item = navWrapper.querySelector('[data-slot="navigation-menu-item"]') as HTMLElement
+      }
+
+      if (item) {
+        moveSvgElement(item)
+      }
+    }
+
+    navWrapper.addEventListener("mouseleave", handleMouseLeave)
+
     const items = navWrapper.querySelectorAll('[data-slot="navigation-menu-item"]') as NodeListOf<HTMLElement>
+
     items.forEach((item) => {
       item.addEventListener("mouseenter", handleInteraction)
       item.addEventListener("click", handleInteraction)
     })
 
     // When the page loads, the svg must be at the position of the last active item
-    if (lastActiveItem) {
-      const item = navWrapper.querySelector(`[data-slot="navigation-menu-item"][data-link-href="${lastActiveItem}"]`) as HTMLElement
-      if (item) {
-        moveSvgElement(item)
-      }
+    let initialItem = navWrapper.querySelector(`[data-slot="navigation-menu-item"][data-link-href="${lastActiveItem}"]`) as HTMLElement
+    
+    // Fallback to first item if not found or if lastActiveItem is falsy
+    if (!initialItem) {
+      initialItem = navWrapper.querySelector('[data-slot="navigation-menu-item"]') as HTMLElement
     }
-    // else the svg must be at the position of the first item 
-    else {
-      const firstItem = navWrapper.querySelector('[data-slot="navigation-menu-item"]') as HTMLElement
-      if (firstItem) {
-        moveSvgElement(firstItem)
-      }
+
+    if (initialItem) {
+      moveSvgElement(initialItem)
     }
 
     const observer = new ResizeObserver(() => {
@@ -93,36 +128,38 @@ function NavigationMenu({
         item.removeEventListener("mouseenter", handleInteraction)
         item.removeEventListener("click", handleInteraction)
       })
+      navWrapper.removeEventListener("mouseleave", handleMouseLeave)
       observer.disconnect()
     }
   }, [])
 
+  const prevRouteAboutToChange = React.useRef<boolean | null>(null)
+
   React.useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
+    if (!tlRef.current || !loadingRef.current) return
+
+    // skip the initial false — nothing to hide yet
+    if (prevRouteAboutToChange.current === null && !routeAboutToChange) {
+      prevRouteAboutToChange.current = false
       return
     }
+    prevRouteAboutToChange.current = routeAboutToChange
 
-    queueRef.current = queueRef.current.then(async () => {
-      if (!tlRef.current) return
+    gsap.killTweensOf(loadingRef.current)
 
-      if (routeAboutToChange) {
-        console.log("queue: transitioning to loading circle")
-        // Ensure timeline is paused before tweening playhead
-        tlRef.current.pause()
-        await tlRef.current.tweenTo("circle", {
-          duration: 0.6,
-          ease: "expo.inOut"
-        })
-        await gsap.to(loadingRef.current, { opacity: 1, duration: 0.3 })
-      } else {
-        console.log("queue: returning to full nav")
-        await gsap.to(loadingRef.current, { opacity: 0, duration: 0.2 })
-        tlRef.current.play()
-        // Wait for the timeline to finish reaching the end
-        await tlRef.current
-      }
-    })
+    if (routeAboutToChange) {
+      tlRef.current.pause()
+      tlRef.current.tweenTo("circle", { duration: 0.6, ease: "expo.inOut" })
+      gsap.to(loadingRef.current, { opacity: 1, duration: 0.3, delay: 0.4 })
+    } else {
+      gsap.to(loadingRef.current, {
+        opacity: 0,
+        duration: 0.2,
+        onComplete: () => {
+          tlRef.current?.tweenTo("full", { duration: 0.6, ease: "expo.inOut" })
+        }
+      })
+    }
   }, [routeAboutToChange])
 
   React.useLayoutEffect(() => {
@@ -173,7 +210,6 @@ function NavigationMenu({
     }
   }, [])
 
-
   return (
     <NavigationMenuPrimitive.Root
       ref={navRef}
@@ -208,8 +244,7 @@ function NavigationMenu({
         {children}
       </div>
       <div ref={loadingRef} className="absolute inset-0 flex items-center justify-center opacity-0 pointer-events-none">
-        <div className="flex gap-1.5">
-        </div>
+        <BloomLoader bloomBackgroundColor={bloomBackgroundColor} />
       </div>
       {viewport && <NavigationMenuViewport />}
     </NavigationMenuPrimitive.Root>
@@ -312,7 +347,7 @@ function NavigationMenuLink({
     <NavigationMenuPrimitive.Link
       data-slot="navigation-menu-link"
       className={cn(
-        "flex items-center gap-2 rounded-lg p-2 text-sm transition-all outline-none hover:bg-muted data-[active]:bg-muted/50 data-[active]:hover:bg-muted data-[active]:focus:bg-muted [&_svg:not([class*='size-'])]:size-4 dark:text-background dark:hover:text-foreground",
+        "flex items-center rounded-lg p-2 text-sm transition-all outline-none hover:bg-muted data-[active]:bg-muted/50 data-[active]:hover:bg-muted data-[active]:focus:bg-muted [&_svg:not([class*='size-'])]:size-4 dark:text-background dark:hover:text-foreground",
         className
       )}
       {...props}
